@@ -1,0 +1,55 @@
+.bg-gradient{
+    /* background: linear-gradient(to right, rgba(241,231,103,1) 0%, rgba(254,182,69,1) 100%); */
+    background: #6309FB;
+    background: linear-gradient(to right, #6309FB 0%,  #EB664B 100%);
+}
+
+.bg-request{
+    background: linear-gradient(270deg, #94ff00, #0acac3);
+    background-size: 400% 400%;
+
+    -webkit-animation: AnimationName 11s ease infinite;
+    -moz-animation: AnimationName 11s ease infinite;
+    animation: AnimationName 11s ease infinite;
+}
+@-webkit-keyframes AnimationName {
+    0%{background-position:0% 11%}
+    50%{background-position:100% 90%}
+    100%{background-position:0% 11%}
+}
+@-moz-keyframes AnimationName {
+    0%{background-position:0% 11%}
+    50%{background-position:100% 90%}
+    100%{background-position:0% 11%}
+}
+@keyframes AnimationName {
+    0%{background-position:0% 11%}
+    50%{background-position:100% 90%}
+    100%{background-position:0% 11%}
+}
+
+
+.width-40{
+    width: 40%;
+    min-width: 450px;
+}
+
+.mt-2 {
+    margin-top: 2% !important;
+}
+
+label{
+    font-size: 70%;
+}
+
+
+.nav-link .active {
+    background-color: black;
+}
+
+
+.dropdown-toggle{
+    display: block;
+    background: white;
+    border: 1px #ced4da solid;
+}

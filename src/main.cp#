@@ -1,0 +1,22 @@
+//#include <Arduino.h>
+
+#include <global.h>
+#include <bme280.cpp>
+#include <espNow.cpp>
+
+void setup() {
+
+  Serial.begin(115200);
+  bme280Init();
+  espNowInit();
+
+}
+
+void loop() {
+  readbme280();
+  sendSensor();
+
+
+
+  delay(2000);
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document ESP 32 Setting</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body class="bg-gradient">
+    <nav class="navbar navbar-light navbar-expand-md bg-light justify-content-center">
+        <a href="#" target="_blank" class="navbar-brand mr-0">
+            <img class="" src="" alt=""/> Developers united
+        </a> 
+        <button class="navbar-toggler ml-1" type="button" data-toggle="collapse" data-target="#collapsingNavbar2">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse collapse justify-content-between align-items-center w-100" id="collapsingNavbar2">
+            <ul class="navbar-nav mx-auto text-center">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#setup">Setup</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#tools">Tools</a>
+                </li>                   
+            </ul>               
+        </div>
+    </nav>
+
+
+      <!-- Tab panes -->
+      <div class="tab-content">
+        <div id="setup" class="container tab-pane active"><br>
+            <div class="container card card-body bg-light mt-3 width-40">
+                <h2 class="text-center">Slave Setup</h2>
+                <form action="/getFormSetup" class="needs-validation" method="POST">
+                    <hr>
+
+                    <div class="form-group">
+                        <label for="apList">AP List:</label>
+                        <select id="apList" name="apList" class="selectpicker show-tick form-control" data-live-search="true" title="Choose one of the following...">
+                            <!-- <option data-tokens="ketchup mustard">Wait scanning</option> -->
+                            <!-- <option data-tokens="mustard">Burger, Shake and a Smile</option>
+                            <option data-tokens="frosting">Sugar, Spice and all things nice</option> -->
+                        </select>                   
+                    </div>
+
+
+                    <div class="form-group row">
+                        <div class="col-md-8">
+                            <label for="ip">Mac Address:</label>
+                            <input type="text" class="form-control" id="mac"
+                                placeholder="Mac address" name="mac" pattern="^[a-fA-F0-9:]{17}|[a-fA-F0-9]{12}$" readonly required>
+                            <div class="valid-feedback">Valid.</div>
+                            <div class="invalid-feedback">Please fill out this field.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="channel">Channel:</label>
+                            <input type="number" class="form-control" id="channel" placeholder="Channel" name="channel" readonly required>
+                            <div class="valid-feedback">Valid.</div>
+                            <div class="invalid-feedback">Please fill out this field.</div>
+                        </div>
+                    </div>                  
+
+                    <div class="form-group">
+                      
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd">Password ESP NOW:</label>
+                        <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pwd" required>
+                        <div class="valid-feedback">Valid.</div>
+                        <div class="invalid-feedback">Please fill out this field.</div>
+ 
+                    </div>      
+
+                    <hr>
+                    <button type="submit"
+                        class="btn btn-outline-info btn-rounded btn-block my-4 waves-effect z-depth-0"><i
+                            class="fas fa-paper-plane"></i> Submit</button>
+                </form>
+            </div>
+        </div>
+        <!--setup -->
+
+        <div id="tools" class="container tab-pane fade"><br>
+            <div class="container card card-body bg-light mt-2 width-40">
+                <h2 class="text-center">Slave Tools</h2>
+                <hr>
+                <div class="form-group">
+                    <a href="/topology">
+                        <button type="button" class="btn btn-primary btn-block"><i class="fas fa-network-wired"></i>
+                        Topology</button>
+                    </a>
+                </div>
+                <div class="form-group">
+                    <a href="/reset"><button type="button" class="btn btn-danger btn-block"><i class="fas fa-sync-alt"></i> Reset</button></a>
+                </div>
+            </div>
+        </div>
+        <!-- tools -->
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap-select.min.js"></script>
+
+    <script> 
+
+        let a = $('.navbar-brand ').width();
+        let b = $('.navbar-nav ').width() / 2;
+        let c = a - b;
+
+        $('.navbar-nav').css({'position' : 'relative' , 'left' : -c + "px" });
+
+        $("ul.navbar-nav").click(function() {
+            $("a.nav-link").removeClass('active');
+            $(this).addClass('active');
+        });
+
+        // Disable form submissions if there are invalid fields
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                // Get the forms we want to add validation styles to
+                var forms = document.getElementsByClassName('needs-validation');
+                // Loop over them and prevent submission
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+
+        const dropDown_APList = ()=>{
+            var xhttp = new XMLHttpRequest()
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    //console.log(this.responseText)
+                    const apList = JSON.parse(this.responseText)
+                    const apListSelector = document.getElementById("apList")
+             
+                    apListSelector.innerHTML = ""
+                    apList.forEach(obj => {
+                        // console.log(obj['ssid']);   
+                        let opt = document.createElement('option')
+                        // create text node to add to option element (opt)
+                        opt.appendChild( document.createTextNode(`${obj['ssid']} (${obj['rssi']})dB Ch:${obj['ch']}`))
+                        opt.value = obj['ssid']
+                        opt.dataset.rssi = obj['rssi']
+                        opt.dataset.ch = obj['ch']
+                        opt.dataset.mac = obj['mac']
+                        apListSelector.appendChild(opt)
+
+                        // Object.entries(obj).forEach(([key, value]) => {
+                        //     console.log(`${key} ${value}`);
+                        // });
+                    });
+                    
+                    $('.selectpicker').selectpicker('refresh')
+                    $('.selectpicker').selectpicker('deselectAll')
+
+                }
+            };
+            xhttp.open("GET", "/apList", true)
+            xhttp.send()
+        }
+
+        window.onload = ()=>{
+            //Define la version de bootstrap utilizada
+            $.fn.selectpicker.Constructor.BootstrapVersion = '4';
+
+            //Dropdonw list event
+            $('#apList').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                //console.log($('.selectpicker').selectpicker('val'));
+                let dataTypeAttribute_Ch = $('option:selected', this).attr("data-ch")
+                let dataTypeAttribute_Mac = $('option:selected', this).attr("data-mac")
+                document.getElementById('channel').value = dataTypeAttribute_Ch
+                document.getElementById('mac').value = dataTypeAttribute_Mac;
+            });
+
+            //This event fires after the select has been initialized.
+            $('#apList').on('loaded.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                dropDown_APList()
+            });
+        }
+
+
+    </script>
+
+</body>
+</html>
