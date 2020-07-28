@@ -189,7 +189,6 @@
                 // Se descuenta un bit a la MAC de maestro, la MAC es distinta en
                 // MODE_STA y MODE_AP
                 let res = dataTypeAttribute_Mac.split(":");
-                console.log(res[5]);
                 let aux = parseInt(res[5],16);   // num now holds 127 
                 aux--;
                 let hex = aux.toString(16).toLocaleUpperCase();
