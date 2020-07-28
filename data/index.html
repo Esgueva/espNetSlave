@@ -185,8 +185,26 @@
                 //console.log($('.selectpicker').selectpicker('val'));
                 let dataTypeAttribute_Ch = $('option:selected', this).attr("data-ch")
                 let dataTypeAttribute_Mac = $('option:selected', this).attr("data-mac")
+                
+                // Se descuenta un bit a la MAC de maestro, la MAC es distinta en
+                // MODE_STA y MODE_AP
+                let res = dataTypeAttribute_Mac.split(":");
+                console.log(res[5]);
+                let aux = parseInt(res[5],16);   // num now holds 127
+                console.log(aux);    
+                aux--;
+                console.log(aux);
+                let hex = aux.toString(16).toLocaleUpperCase();
+
+
+                console.log(hex);
+                res[5] = hex;
+                console.log(res);
+                
+                //Rellena los campos
                 document.getElementById('channel').value = dataTypeAttribute_Ch
-                document.getElementById('mac').value = dataTypeAttribute_Mac;
+                // document.getElementById('mac').value = dataTypeAttribute_Mac;
+                document.getElementById('mac').value = `${res[0]}:${res[1]}:${res[2]}:${res[3]}:${res[4]}:${res[5]}`
             });
 
             //This event fires after the select has been initialized.

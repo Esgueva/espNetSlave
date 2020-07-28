@@ -37,11 +37,11 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
   if (status == 0)
   {
-    //success = "Delivery Success :)";
+    _APP_DEBUG_("OnDataSent","Delivery Success :)");
   }
   else
   {
-    //success = "Delivery Fail :(";
+    _APP_DEBUG_("OnDataSent", "Delivery Fail :(");
   }
 }
 
@@ -158,15 +158,17 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
 void espnowInit()
 {
 
-  //WiFi.disconnect();
+  WiFi.disconnect();
 
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK)
   {
-    Serial.println("Error initializing ESP-NOW");
+    _APP_DEBUG_("espnowInit()", "Error initializing ESP-NOW");
     ESP.restart();
     return;
   }
+
+  _APP_DEBUG_("ESPNow", "Init Success!");
 
   // Once ESPNow is successfully Init, we will register for Send CB to
   // get the status of Trasnmitted packet
@@ -176,35 +178,30 @@ void espnowInit()
   esp_now_register_recv_cb(OnDataRecv);
 }
 
+
 void broadcastInit()
 {
-  _APP_DEBUG_("INIT", "broadcastInit()");
-  // Register peer
-  if (appPreferences.mac_ap == "")
-  {
-    memcpy(peerInfo.peer_addr, broadcastAddress_default, 6);
-    peerInfo.channel = CHAN_AP_DEFAULT;
-    _APP_DEBUG_("MAC", "broadcastAddress_default");
-    _APP_DEBUG_("CHAN_AP", CHAN_AP_DEFAULT);
-  }
-  else
-  {
-    memcpy(peerInfo.peer_addr, appPreferences.mac_ap.c_str(), 6);
-    uint8_t ch = atoi(appPreferences.chan_ap.substring(0, 2).c_str());
-    peerInfo.channel = ch;
-    _APP_DEBUG_("MAC", appPreferences.mac_ap);
-    _APP_DEBUG_("CHAN", appPreferences.chan_ap);
-    _APP_DEBUG_("ch", ch);
-    _APP_DEBUG_("wifi ch", WiFi.channel());
-  }
+  _APP_DEBUG_("Esp NOW", "broadcastInit()");
+  _APP_DEBUG_("MAC", appPreferences.mac_ap);
+  _APP_DEBUG_("CHAN", appPreferences.chan_ap);
+  _APP_DEBUG_("wifi ch", WiFi.channel());
 
+  // Register MASTER peer
+  uint8_t sendMaster[] = {0x24, 0x62, 0xAB, 0xF3, 0x08, 0xD4};
+
+  memcpy(&peerInfo.peer_addr, &sendMaster, 6);
+
+  // memcpy(peerInfo.peer_addr, appPreferences.mac_ap.c_str(), 6);
+  peerInfo.channel = appPreferences.chan_ap.toInt();
   peerInfo.encrypt = false;
+  peerInfo.ifidx = ESP_IF_WIFI_STA;
 
   // Add peer
-  if (esp_now_add_peer(&peerInfo) != ESP_OK)
+  if (esp_now_add_peer(&peerInfo) == ESP_OK)
   {
-    Serial.println("Failed to add peer");
-    return;
+     _APP_DEBUG_("broadcastInit()", "Added Master Node!");
+  }else{
+     _APP_DEBUG_("broadcastInit()", "Master Node could not be added...");
   }
 }
 
@@ -301,7 +298,7 @@ void networkStationInit()
   _APP_DEBUG_("SSID ESP NOW", appPreferences.ssid_ap);
   _APP_DEBUG_("PASS", appPreferences.pass_ap);
 
-  WiFi.begin(appPreferences.ssid_ap.c_str(), appPreferences.pass_ap.c_str());
+  WiFi.begin(appPreferences.ssid_ap.c_str(), appPreferences.pass_ap.c_str(), appPreferences.chan_ap.toInt());
   _APP_DEBUG_("INIT", "Connecting to Access Point");
 
   while (WiFi.status() != WL_CONNECTED)

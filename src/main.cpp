@@ -81,7 +81,7 @@ void setup()
   else if (appPreferences.ssid_ap != "" && appPreferences.pass_ap != "" && appPreferences.mac_ap != "" && appPreferences.chan_ap != "")
   {
     //Inicar red en modo STATION
-     _APP_DEBUG_("INIT", "Aplicando preferencias");
+    _APP_DEBUG_("INIT", "Aplicando preferencias");
     sensorsActive = true;
     networkStationInit();
     espnowInit();
@@ -105,25 +105,4 @@ void loop()
   }
 
   delay(5000);
-
-  //   preferences.begin("config",false);
-  //  // Serial.println (preferences.getString("mess_1"));
-
-  //   int schLen = preferences.getBytesLength("broadcastMaster");
-  //   char buffer[schLen]; // prepare a buffer for the data
-  //   preferences.getBytes("broadcastMaster", buffer, schLen);
-  //   Serial.print (buffer[0], HEX);
-  //   Serial.print(":");
-  //   Serial.print (buffer[1], HEX);
-  //     Serial.print(":");
-  //   Serial.print (buffer[2], HEX);
-  //     Serial.print(":");
-  //   Serial.print (buffer[3], HEX);
-  //     Serial.print(":");
-  //   Serial.print (buffer[4], HEX);
-  //     Serial.print(":");
-  //   Serial.print (buffer[5], HEX);
-  //   Serial.println("");
-
-  //   preferences.end();
 }
