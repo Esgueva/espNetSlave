@@ -186,11 +186,30 @@ void broadcastInit()
   _APP_DEBUG_("CHAN", appPreferences.chan_ap);
   _APP_DEBUG_("wifi ch", WiFi.channel());
 
-  // Register MASTER peer
-  // uint8_t sendMaster[] = {0x24, 0x62, 0xAB, 0xF3, 0x08, 0xD4};
-  //memcpy(&peerInfo.peer_addr, &sendMaster, 6);
+  //uint8_t sendMaster[6];
 
-  memcpy(peerInfo.peer_addr, appPreferences.mac_ap.c_str(), 6);
+  // char aux[2];
+
+  // Register MASTER peer
+  uint8_t sendMaster[6] = {0x24, 0x62, 0xAB, 0xF3, 0x08, 0xD4};
+  memcpy(&peerInfo.peer_addr, &sendMaster, 6);
+
+  // Serial.println(appPreferences.mac_ap.substring(0,2));
+
+  // sendMaster[0] = strtol( appPreferences.mac_ap.substring(0,2).c_str(), NULL, 10);
+
+  // Serial.println(sendMaster[0]);
+
+
+  // Serial.println(appPreferences.mac_ap.substring(6,8));
+
+  // sendMaster[0] = strtol( appPreferences.mac_ap.substring(6,8).c_str(), NULL, 10);
+
+  // Serial.println(sendMaster[2]);
+ 
+  //Serial.println(sendMaster[0]);
+
+  //memcpy(peerInfo.peer_addr, appPreferences.mac_ap.c_str(), 6);
   peerInfo.channel = appPreferences.chan_ap.toInt();
   peerInfo.encrypt = false;
   peerInfo.ifidx = ESP_IF_WIFI_STA;
