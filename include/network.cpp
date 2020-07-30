@@ -178,6 +178,22 @@ void espnowInit()
   esp_now_register_recv_cb(OnDataRecv);
 }
 
+/*
+  Covierte una ip o mac en valores tipo byte
+  recibe un parametro que sirve de separador -> sep
+  bytes almacena el dato tras la conversion
+*/
+void parseBytes(const char* str, char sep, uint8_t* bytes, int maxBytes, int base) {
+    for (int i = 0; i < maxBytes; i++) {
+        bytes[i] = strtoul(str, NULL, base);  // Convert byte
+        str = strchr(str, sep);               // Find next separator
+        if (str == NULL || *str == '\0') {
+            break;                            // No more separators, exit
+        }
+        str++;                                // Point to next character after separator
+    }
+}
+
 
 void broadcastInit()
 {
@@ -186,30 +202,17 @@ void broadcastInit()
   _APP_DEBUG_("CHAN", appPreferences.chan_ap);
   _APP_DEBUG_("wifi ch", WiFi.channel());
 
-  //uint8_t sendMaster[6];
+  //const char* macStr =  "24:62:AB:F3:08:D4";
+  const char* macStr =  appPreferences.mac_ap.c_str();
+  //byte mac[6];
 
-  // char aux[2];
+  uint8_t mac[6];
 
-  // Register MASTER peer
-  uint8_t sendMaster[6] = {0x24, 0x62, 0xAB, 0xF3, 0x08, 0xD4};
-  memcpy(&peerInfo.peer_addr, &sendMaster, 6);
-
-  // Serial.println(appPreferences.mac_ap.substring(0,2));
-
-  // sendMaster[0] = strtol( appPreferences.mac_ap.substring(0,2).c_str(), NULL, 10);
-
-  // Serial.println(sendMaster[0]);
+  parseBytes(macStr, ':', mac, 6, 16);
 
 
-  // Serial.println(appPreferences.mac_ap.substring(6,8));
+  memcpy(&peerInfo.peer_addr, &mac, 6);
 
-  // sendMaster[0] = strtol( appPreferences.mac_ap.substring(6,8).c_str(), NULL, 10);
-
-  // Serial.println(sendMaster[2]);
- 
-  //Serial.println(sendMaster[0]);
-
-  //memcpy(peerInfo.peer_addr, appPreferences.mac_ap.c_str(), 6);
   peerInfo.channel = appPreferences.chan_ap.toInt();
   peerInfo.encrypt = false;
   peerInfo.ifidx = ESP_IF_WIFI_STA;
