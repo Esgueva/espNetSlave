@@ -98,6 +98,13 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
     Serial.print("VALUE::::::: ");
     Serial.println(value);
 
+
+    digitalWrite(gpio, value);
+
+    delay(1000);
+
+    digitalWrite(gpio, LOW);
+
     //int timer = doc["timer"]; // si es 0, es inifito
     // pinMode(gpio, OUTPUT);
     //  digitalWrite(gpio, value);
@@ -215,7 +222,7 @@ void broadcastInit()
 
   peerInfo.channel = appPreferences.chan_ap.toInt();
   peerInfo.encrypt = false;
-  peerInfo.ifidx = ESP_IF_WIFI_STA;
+  peerInfo.ifidx = ESP_IF_WIFI_STA; //ESP_IF_WIFI_AP 
 
   // Add peer
   if (esp_now_add_peer(&peerInfo) == ESP_OK)
@@ -309,6 +316,15 @@ String scanNetworks()
   return json;
 }
 
+
+void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+  // Handling function code
+  _APP_DEBUG_("WiFiStationConnected", event);
+  _APP_DEBUG_("INIT", "Connected to Access Point ;)");
+}
+
+
 //ESP 32
 void networkStationInit()
 {
@@ -319,6 +335,8 @@ void networkStationInit()
   _APP_DEBUG_("SSID ESP NOW", appPreferences.ssid_ap);
   _APP_DEBUG_("PASS", appPreferences.pass_ap);
 
+  WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
+
   WiFi.begin(appPreferences.ssid_ap.c_str(), appPreferences.pass_ap.c_str(), appPreferences.chan_ap.toInt());
   _APP_DEBUG_("INIT", "Connecting to Access Point");
 
@@ -327,8 +345,7 @@ void networkStationInit()
     delay(1000);
     Serial.print(".");
   }
-
-  _APP_DEBUG_("INIT", "Connected to Access Point ;)");
+  
 }
 
 /*

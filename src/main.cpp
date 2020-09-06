@@ -24,10 +24,17 @@ void updateDisplay();
 
 boolean sensorsActive = false;
 
+
+const int relay1 =  12;
+
 void setup()
 {
   // Init Serial Monitor
   Serial.begin(115200);
+
+  pinMode(relay1, OUTPUT);
+
+
 
   // Initialize SPIFFS
   if (!SPIFFS.begin(true))
@@ -53,6 +60,7 @@ void setup()
 #endif
 
   delay(10);
+
   //cleanWifiPreferences();
 
   appPreferences.ssid_ap = getPreferenceByName("SSID_AP", "");
@@ -105,4 +113,5 @@ void loop()
   }
 
   delay(5000);
+
 }
