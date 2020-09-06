@@ -1,5 +1,8 @@
 /*
  platformio run --target uploadfs
+
+  INFO :: Gpio12 es un pin de arranque, puede establecer el voltaje de flash (incorrecto) y habilitar el ldo interno. NO UTILIZAR
+
 */
 #include <Arduino.h>
 #include <global.h>
@@ -25,16 +28,12 @@ void updateDisplay();
 boolean sensorsActive = false;
 
 
-const int relay1 =  12;
+const int relay1 =  2;
 
 void setup()
 {
   // Init Serial Monitor
   Serial.begin(115200);
-
-  pinMode(relay1, OUTPUT);
-
-
 
   // Initialize SPIFFS
   if (!SPIFFS.begin(true))
@@ -97,6 +96,9 @@ void setup()
     // Init BME280 sensor
     bme280Init();
   }
+
+  pinMode(relay1, OUTPUT);
+  digitalWrite(relay1, LOW);
 
 }
 

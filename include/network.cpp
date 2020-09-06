@@ -50,7 +50,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 /*
 
 {
-  "gpio": 12,
+  "gpio": 2,
   "value": "on/off"
 }
 
@@ -94,16 +94,29 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
     int gpio = doc["gpio"];
     Serial.print("GPIO :::");
     Serial.println(gpio);
-    boolean value = doc["value"];
+    int value = doc["value"];
     Serial.print("VALUE::::::: ");
     Serial.println(value);
 
+    boolean pinStatus = digitalRead(gpio);
+    Serial.println("-----------------");
+    Serial.println(pinStatus);
 
-    digitalWrite(gpio, value);
+    //digitalWrite(gpio, !pinStatus);
 
-    delay(1000);
+    //delay(500);
 
-    digitalWrite(gpio, LOW);
+    if(value == 1){
+      Serial.println("high");
+        digitalWrite(gpio, HIGH );
+    }else{
+       digitalWrite(gpio, LOW );
+       Serial.println("low");
+    }
+
+    // delay(1000);
+
+    // digitalWrite(gpio, LOW);
 
     //int timer = doc["timer"]; // si es 0, es inifito
     // pinMode(gpio, OUTPUT);
