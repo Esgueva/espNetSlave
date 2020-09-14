@@ -47,6 +47,8 @@ String readbme280(){
   doc["data"]["press"] =  roundf((bme.readPressure() / 100.0F) * 100) / 100;  
   serializeJson(doc, json);
 
+  _APP_DEBUG_("BME JSON", json)
+
   return json;
 
 }

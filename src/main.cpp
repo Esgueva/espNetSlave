@@ -28,12 +28,21 @@ void updateDisplay();
 boolean sensorsActive = false;
 
 
-const int relay1 =  2;
+const int relayCH1 =  32;
+const int relayCH2 =  33;
+
+unsigned long previousMillis = 0;
 
 void setup()
 {
   // Init Serial Monitor
   Serial.begin(115200);
+
+
+  //Define las salidas GPIO
+  pinMode(relayCH1, OUTPUT);
+  pinMode(relayCH2, OUTPUT);
+
 
   // Initialize SPIFFS
   if (!SPIFFS.begin(true))
@@ -97,23 +106,23 @@ void setup()
     bme280Init();
   }
 
-  pinMode(relay1, OUTPUT);
-  digitalWrite(relay1, LOW);
-
 }
 
 void loop()
 {
   //Actualiza los valores del sensor temp,hum,pres
 
-  if (sensorsActive)
+  unsigned long currentMillis = millis();
+
+  if (sensorsActive && currentMillis - previousMillis > 5000)
   {
+    previousMillis = currentMillis;
     String msg = readbme280();
      _APP_DEBUG_("SEND", msg);
     espnowSend(msg);
     //verIncomingReadings();
   }
 
-  delay(5000);
+  //delay(3000);
 
 }

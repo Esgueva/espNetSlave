@@ -102,9 +102,9 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
     Serial.println("-----------------");
     Serial.println(pinStatus);
 
-    //digitalWrite(gpio, !pinStatus);
+    // digitalWrite(gpio, !pinStatus);
 
-    //delay(500);
+    // delay(500);
 
     if(value == 1){
       Serial.println("high");
