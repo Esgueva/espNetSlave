@@ -30,12 +30,23 @@ void setPreferenceByName(String name, String value);
 // // Variable to store if sending data was successful
 //String success;
 
+bool msgRequest = false;
+// si pasado este tiempo no recive respuesta reinica el dispositivo
+unsigned long previousMillismsgRequestTimeOut = 0;
+unsigned long espNowTimeOut = 0;
+unsigned int msgTimeOut = 100;
+
 // Callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
+
+   Serial.println("----------");
+  Serial.println(status);
+      Serial.println("----------");
+
   Serial.print("\r\nLast Packet Send Status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  if (status == 0)
+  if (status == ESP_NOW_SEND_SUCCESS)
   {
     _APP_DEBUG_("OnDataSent","Delivery Success :)");
   }
@@ -69,7 +80,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingData_len)
 {
-  // memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
+  
   Serial.print("Bytes received: ");
   Serial.println(incomingData_len);
 
@@ -78,9 +89,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
   memcpy(&buffer, incomingData, incomingData_len);
 
   Serial.println(buffer);
-  //String aux = String(buffer);
+
 
   int pos;
+
+  pos = String(buffer).indexOf("msgRecv");
+
+  //Comprueba si el mensaje fue entrgado 
+  if(pos != -1){
+      Serial.println("msgRecv");
+      Serial.println(pos);
+      msgRequest = false;
+  }
 
   pos = String(buffer).indexOf("gpio");
 
@@ -102,10 +122,6 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
     Serial.println("-----------------");
     Serial.println(pinStatus);
 
-    // digitalWrite(gpio, !pinStatus);
-
-    // delay(500);
-
     if(value == 1){
       Serial.println("high");
         digitalWrite(gpio, HIGH );
@@ -114,9 +130,6 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
        Serial.println("low");
     }
 
-    // delay(1000);
-
-    // digitalWrite(gpio, LOW);
 
     //int timer = doc["timer"]; // si es 0, es inifito
     // pinMode(gpio, OUTPUT);
@@ -138,9 +151,12 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingDat
   {
     StaticJsonDocument<250> doc;
     DeserializationError err = deserializeJson(doc, buffer);
-    const char *command = doc["value"];
+    String command = doc["command"];
+    String value = doc["value"];
     Serial.print("COMMAND ::::::: ");
     Serial.println(command);
+    Serial.print("Value ::::::: ");
+    Serial.println(value);
     //system(command);
     return;
   }
@@ -243,6 +259,11 @@ void broadcastInit()
      _APP_DEBUG_("broadcastInit()", "Added Master Node!");
   }else{
      _APP_DEBUG_("broadcastInit()", "Master Node could not be added...");
+       bool exists = esp_now_is_peer_exist(mac);
+
+        if (exists){
+          _APP_DEBUG_("broadcastInit()", "Master Node Exist");
+        }
   }
 }
 
@@ -254,6 +275,8 @@ void espnowSend(String msg)
   if (result == ESP_OK)
   {
     _APP_DEBUG_("espnowSend", "Sent with success");
+    espNowTimeOut = millis();
+    msgRequest = true; //Esta pendiente de recibir confirmacin, si no recibe 1)No esta autorizado 2)No fue autorizado, y necesita validar
   }
   else
   {
@@ -337,6 +360,12 @@ void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
   _APP_DEBUG_("INIT", "Connected to Access Point ;)");
 }
 
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+  // Handling function code
+  _APP_DEBUG_("WiFiStationDisconnected", event);
+  _APP_DEBUG_("INIT", "WiFi.disconnect()");
+}
 
 //ESP 32
 void networkStationInit()
@@ -349,13 +378,14 @@ void networkStationInit()
   _APP_DEBUG_("PASS", appPreferences.pass_ap);
 
   WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
+  WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
 
   WiFi.begin(appPreferences.ssid_ap.c_str(), appPreferences.pass_ap.c_str(), appPreferences.chan_ap.toInt());
   _APP_DEBUG_("INIT", "Connecting to Access Point");
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(1000);
+    delay(100);
     Serial.print(".");
   }
   

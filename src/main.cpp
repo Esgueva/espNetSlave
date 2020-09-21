@@ -33,6 +33,7 @@ const int relayCH2 =  33;
 
 unsigned long previousMillis = 0;
 
+
 void setup()
 {
   // Init Serial Monitor
@@ -96,33 +97,53 @@ void setup()
   }
   else if (appPreferences.ssid_ap != "" && appPreferences.pass_ap != "" && appPreferences.mac_ap != "" && appPreferences.chan_ap != "")
   {
+
     //Inicar red en modo STATION
     _APP_DEBUG_("INIT", "Aplicando preferencias");
-    sensorsActive = true;
     networkStationInit();
     espnowInit();
     broadcastInit();
     // Init BME280 sensor
     bme280Init();
+    sensorsActive = true;
   }
+
+  delay(2000);
 
 }
 
 void loop()
 {
+
+   unsigned long currentMillis = millis();
+
+  // Serial.println(msgRequest);
+  // Serial.println(previousMillismsgRequestTimeOut);
+
+  if (msgRequest && currentMillis - espNowTimeOut > msgTimeOut){
+    //previousMillismsgRequestTimeOut = currentMillis;
+    Serial.println("Reiniciar servicios, validar dispositivo");
+    msgRequest = false;
+    //ESP.restart();
+    networkStationInit();
+    espnowInit();
+    broadcastInit();
+  }
+
+
   //Actualiza los valores del sensor temp,hum,pres
 
-  unsigned long currentMillis = millis();
+  //unsigned long currentMillis = millis();
 
-  if (sensorsActive && currentMillis - previousMillis > 5000)
+
+  if (!msgRequest && sensorsActive && currentMillis - previousMillis > 5000)
   {
     previousMillis = currentMillis;
     String msg = readbme280();
-     _APP_DEBUG_("SEND", msg);
+    _APP_DEBUG_("SEND", msg);
     espnowSend(msg);
-    //verIncomingReadings();
   }
 
-  //delay(3000);
+
 
 }
