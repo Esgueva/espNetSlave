@@ -28,9 +28,6 @@ void updateDisplay();
 boolean sensorsActive = false;
 
 
-const int relayCH1 =  32;
-const int relayCH2 =  33;
-
 unsigned long previousMillis = 0;
 
 
@@ -115,16 +112,9 @@ void setup()
 void loop()
 {
 
-   unsigned long currentMillis = millis();
-
-  // Serial.println(msgRequest);
-  // Serial.println(previousMillismsgRequestTimeOut);
-
-  if (msgRequest && currentMillis - espNowTimeOut > msgTimeOut){
-    //previousMillismsgRequestTimeOut = currentMillis;
-    Serial.println("Reiniciar servicios, validar dispositivo");
+  if (msgRequest &&  millis() - espNowTimeOut > msgTimeOut){
+    Serial.println("Reiniciar dispositivo, validar dispositivo");
     msgRequest = false;
-    //ESP.restart();
     networkStationInit();
     espnowInit();
     broadcastInit();
@@ -133,12 +123,9 @@ void loop()
 
   //Actualiza los valores del sensor temp,hum,pres
 
-  //unsigned long currentMillis = millis();
-
-
-  if (!msgRequest && sensorsActive && currentMillis - previousMillis > 5000)
+  if (!msgRequest && sensorsActive &&  millis() - previousMillis > 25000)
   {
-    previousMillis = currentMillis;
+    previousMillis = millis();
     String msg = readbme280();
     _APP_DEBUG_("SEND", msg);
     espnowSend(msg);

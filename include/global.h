@@ -1,6 +1,24 @@
 //#define DEBUG false
 //#define USE_SERIAL Serial
 
+//Pines de Conexiones a los reles
+const int relayCH1 =  32;
+const int relayCH2 =  33;
+
+enum Functions
+  {
+    CLEAN_WIFI_PREFERENCES = 0,
+    RESTART = 1,
+    GPIO_STATUS = 2
+};
+
+Functions convertFunction(const std::string& str)
+{
+    if(str == "CLEAN_WIFI_PREFERENCES") return CLEAN_WIFI_PREFERENCES;
+    else if(str == "RESTART") return RESTART;
+    else if(str == "GPIO_STATUS") return GPIO_STATUS;
+}
+
 #define DELETEBEFOREPAIR 0
 #define PRINTSCANRESULTS 1
 
@@ -9,7 +27,7 @@
 // Macros para facilitar la salida de información por el Serial.
 #if defined(_APP_DEBUG_ON_)
     #define _APP_DEBUG_(type, text) Serial.print("("); Serial.print(millis()); Serial.print(" millis)"); Serial.print(" ["); Serial.print(type); Serial.print("] "); Serial.println(text);
-    #define _APP_DEBUG_VALUE_(type, text, value) Serial.print("("); Serial.print(millis()); Serial.print(" millis)"); Serial.print(" ["); Serial.print(type); Serial.print("] "); Serial.print(text); Serial.println(value);
+    #define _APP_DEBUG_VALUE_(type, text, value) Serial.print("("); Serial.print(millis()); Serial.print(" millis)"); Serial.print(" ["); Serial.print(type); Serial.print("] ");Serial.print(text);Serial.print(" ");Serial.println(value);
 #else
     #define _APP_DEBUG_(type, text) void();
     #define _APP_DEBUG_VALUE_(type, text, value) void();

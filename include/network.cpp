@@ -20,7 +20,8 @@ uint8_t broadcastAddress_default[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 esp_now_peer_info_t peerInfo;
 
-// //Prorotype
+// Prototype
+void espnowSend(String json);
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len);
 
@@ -34,26 +35,60 @@ bool msgRequest = false;
 // si pasado este tiempo no recive respuesta reinica el dispositivo
 unsigned long previousMillismsgRequestTimeOut = 0;
 unsigned long espNowTimeOut = 0;
-unsigned int msgTimeOut = 100;
+unsigned int msgTimeOut = 3000;
+
+void managementIncomigData(const String &incomingData)
+{
+  StaticJsonDocument<250> doc;
+  DeserializationError err = deserializeJson(doc, incomingData);
+
+  if (String(incomingData).indexOf("gpio") != -1)
+  {
+    int gpio = doc["gpio"];
+    bool value = doc["value"];
+
+    _APP_DEBUG_VALUE_(F("gpio"), gpio, value);
+
+    value == 1 ? digitalWrite(gpio, HIGH) : digitalWrite(gpio, LOW);
+  }
+  else if (String(incomingData).indexOf("function") != -1)
+  {
+    String function = doc["function"];
+    Functions functionToCall = convertFunction(function.c_str());
+
+    switch (functionToCall)
+    {
+    case CLEAN_WIFI_PREFERENCES:
+      cleanWifiPreferences();
+      break;
+    case RESTART:
+      ESP.restart();
+      break;
+    case GPIO_STATUS:
+      _APP_DEBUG_("FUCTION GPIO_STATUS", "READ CH1 CH2");
+      StaticJsonDocument<250> gpio;
+      String json;
+      String aux = String(digitalRead(relayCH1)) + " " + String(digitalRead(relayCH2));
+      gpio["GPIO_STATUS"] = aux;
+      serializeJson(gpio, json);
+      Serial.println(json);
+      espnowSend(json);
+      break;
+      // default:
+      //       break;
+    }
+  }
+  else if (String(incomingData).indexOf("msgRecv") != -1)
+  {
+    // Comprueba si el mensaje fue entrgado
+    msgRequest = false;
+  }
+}
 
 // Callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-
-   Serial.println("----------");
-  Serial.println(status);
-      Serial.println("----------");
-
-  Serial.print("\r\nLast Packet Send Status:\t");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  if (status == ESP_NOW_SEND_SUCCESS)
-  {
-    _APP_DEBUG_("OnDataSent","Delivery Success :)");
-  }
-  else
-  {
-    _APP_DEBUG_("OnDataSent", "Delivery Fail :(");
-  }
+  _APP_DEBUG_("Last Packet Send Status:\t", status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
 // Callback when data is received
@@ -80,115 +115,15 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int incomingData_len)
 {
-  
-  Serial.print("Bytes received: ");
-  Serial.println(incomingData_len);
 
-  Serial.println("RECV");
+  _APP_DEBUG_(F("Bytes received: "), incomingData_len);
+
   char buffer[incomingData_len];
   memcpy(&buffer, incomingData, incomingData_len);
 
-  Serial.println(buffer);
+  _APP_DEBUG_(F("Incoming Data: "), buffer);
 
-
-  int pos;
-
-  pos = String(buffer).indexOf("msgRecv");
-
-  //Comprueba si el mensaje fue entrgado 
-  if(pos != -1){
-      Serial.println("msgRecv");
-      Serial.println(pos);
-      msgRequest = false;
-  }
-
-  pos = String(buffer).indexOf("gpio");
-
-  Serial.print("POS :: ");
-  Serial.println(pos);
-
-  if (pos != -1)
-  {
-    StaticJsonDocument<250> doc;
-    DeserializationError err = deserializeJson(doc, buffer);
-    int gpio = doc["gpio"];
-    Serial.print("GPIO :::");
-    Serial.println(gpio);
-    int value = doc["value"];
-    Serial.print("VALUE::::::: ");
-    Serial.println(value);
-
-    boolean pinStatus = digitalRead(gpio);
-    Serial.println("-----------------");
-    Serial.println(pinStatus);
-
-    if(value == 1){
-      Serial.println("high");
-        digitalWrite(gpio, HIGH );
-    }else{
-       digitalWrite(gpio, LOW );
-       Serial.println("low");
-    }
-
-
-    //int timer = doc["timer"]; // si es 0, es inifito
-    // pinMode(gpio, OUTPUT);
-    //  digitalWrite(gpio, value);
-
-    // if(timer == 0){
-    //     digitalWrite(gpio, value);
-    //     return;
-    // }
-
-    //temporizador crear un hilo
-
-    return;
-  }
-
-  pos = String(buffer).indexOf("command");
-
-  if (pos != -1)
-  {
-    StaticJsonDocument<250> doc;
-    DeserializationError err = deserializeJson(doc, buffer);
-    String command = doc["command"];
-    String value = doc["value"];
-    Serial.print("COMMAND ::::::: ");
-    Serial.println(command);
-    Serial.print("Value ::::::: ");
-    Serial.println(value);
-    //system(command);
-    return;
-  }
-
-  pos = String(buffer).indexOf("function");
-
-  enum Functions
-  {
-    CLEAN_WIFI_PREFERENCES,
-    RESTART
-  };
-
-  if (pos != -1)
-  {
-    StaticJsonDocument<250> doc;
-    DeserializationError err = deserializeJson(doc, buffer);
-    Functions functionToCall = doc["value"];
-    Serial.print("FUNCTION ::::::: ");
-    // Serial.println(functionToCall.c_str());
-    switch (functionToCall)
-    {
-    case CLEAN_WIFI_PREFERENCES:
-      cleanWifiPreferences();
-      break;
-    case RESTART:
-      ESP.restart();
-      break;
-    default:
-      break;
-    }
-    return;
-  }
+  managementIncomigData(buffer);
 }
 
 void espnowInit()
@@ -219,17 +154,19 @@ void espnowInit()
   recibe un parametro que sirve de separador -> sep
   bytes almacena el dato tras la conversion
 */
-void parseBytes(const char* str, char sep, uint8_t* bytes, int maxBytes, int base) {
-    for (int i = 0; i < maxBytes; i++) {
-        bytes[i] = strtoul(str, NULL, base);  // Convert byte
-        str = strchr(str, sep);               // Find next separator
-        if (str == NULL || *str == '\0') {
-            break;                            // No more separators, exit
-        }
-        str++;                                // Point to next character after separator
+void parseBytes(const char *str, char sep, uint8_t *bytes, int maxBytes, int base)
+{
+  for (int i = 0; i < maxBytes; i++)
+  {
+    bytes[i] = strtoul(str, NULL, base); // Convert byte
+    str = strchr(str, sep);              // Find next separator
+    if (str == NULL || *str == '\0')
+    {
+      break; // No more separators, exit
     }
+    str++; // Point to next character after separator
+  }
 }
-
 
 void broadcastInit()
 {
@@ -239,31 +176,33 @@ void broadcastInit()
   _APP_DEBUG_("wifi ch", WiFi.channel());
 
   //const char* macStr =  "24:62:AB:F3:08:D4";
-  const char* macStr =  appPreferences.mac_ap.c_str();
+  const char *macStr = appPreferences.mac_ap.c_str();
   //byte mac[6];
 
   uint8_t mac[6];
 
   parseBytes(macStr, ':', mac, 6, 16);
 
-
   memcpy(&peerInfo.peer_addr, &mac, 6);
 
   peerInfo.channel = appPreferences.chan_ap.toInt();
   peerInfo.encrypt = false;
-  peerInfo.ifidx = ESP_IF_WIFI_STA; //ESP_IF_WIFI_AP 
+  peerInfo.ifidx = ESP_IF_WIFI_STA; //ESP_IF_WIFI_AP
 
   // Add peer
   if (esp_now_add_peer(&peerInfo) == ESP_OK)
   {
-     _APP_DEBUG_("broadcastInit()", "Added Master Node!");
-  }else{
-     _APP_DEBUG_("broadcastInit()", "Master Node could not be added...");
-       bool exists = esp_now_is_peer_exist(mac);
+    _APP_DEBUG_("broadcastInit()", "Added Master Node!");
+  }
+  else
+  {
+    _APP_DEBUG_("broadcastInit()", "Master Node could not be added...");
+    bool exists = esp_now_is_peer_exist(mac);
 
-        if (exists){
-          _APP_DEBUG_("broadcastInit()", "Master Node Exist");
-        }
+    if (exists)
+    {
+      _APP_DEBUG_("broadcastInit()", "Master Node Exist");
+    }
   }
 }
 
@@ -276,7 +215,7 @@ void espnowSend(String msg)
   {
     _APP_DEBUG_("espnowSend", "Sent with success");
     espNowTimeOut = millis();
-    msgRequest = true; //Esta pendiente de recibir confirmacin, si no recibe 1)No esta autorizado 2)No fue autorizado, y necesita validar
+    msgRequest = true; //Esta pendiente de recibir confirmacion, si no recibe 1)No esta autorizado 2)No fue autorizado, y necesita validar
   }
   else
   {
@@ -352,7 +291,6 @@ String scanNetworks()
   return json;
 }
 
-
 void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
   // Handling function code
@@ -388,7 +326,6 @@ void networkStationInit()
     delay(100);
     Serial.print(".");
   }
-  
 }
 
 /*
@@ -511,9 +448,6 @@ void serverInit()
                                     "<br><a  href='/setup\'>Return to Home Page</a>"
                                     "<img class='' src='logo' alt='Developers United' />"
                                     "</body>");
-  
-  
-  
   });
 
   server.begin();
