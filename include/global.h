@@ -5,20 +5,6 @@
 const int relayCH1 =  32;
 const int relayCH2 =  33;
 
-enum Functions
-  {
-    CLEAN_WIFI_PREFERENCES = 0,
-    RESTART = 1,
-    GPIO_STATUS = 2
-};
-
-Functions convertFunction(const std::string& str)
-{
-    if(str == "CLEAN_WIFI_PREFERENCES") return CLEAN_WIFI_PREFERENCES;
-    else if(str == "RESTART") return RESTART;
-    else if(str == "GPIO_STATUS") return GPIO_STATUS;
-}
-
 #define DELETEBEFOREPAIR 0
 #define PRINTSCANRESULTS 1
 
@@ -26,58 +12,20 @@ Functions convertFunction(const std::string& str)
 
 // Macros para facilitar la salida de información por el Serial.
 #if defined(_APP_DEBUG_ON_)
-    #define _APP_DEBUG_(type, text) Serial.print("("); Serial.print(millis()); Serial.print(" millis)"); Serial.print(" ["); Serial.print(type); Serial.print("] "); Serial.println(text);
-    #define _APP_DEBUG_VALUE_(type, text, value) Serial.print("("); Serial.print(millis()); Serial.print(" millis)"); Serial.print(" ["); Serial.print(type); Serial.print("] ");Serial.print(text);Serial.print(" ");Serial.println(value);
+    #define _APP_DEBUG_(type, text) Serial.print(F("(")); Serial.print(millis()); Serial.print(F(" millis)")); Serial.print(F(" [")); Serial.print(type); Serial.print(F("] ")); Serial.println(text);
+    #define _APP_DEBUG_VALUE_(type, text, value) Serial.print(F("(")); Serial.print(millis()); Serial.print(F(" millis)")); Serial.print(F(" [")); Serial.print(type); Serial.print(F("] "));Serial.print(text);Serial.print(F(" "));Serial.println(value);
 #else
     #define _APP_DEBUG_(type, text) void();
     #define _APP_DEBUG_VALUE_(type, text, value) void();
 #endif // De _APP_DEBUG_ON_
 
-typedef struct AppPreferences{
-    String ssid_ap;
-    String pass_ap;
-    String mac_ap;
-    String chan_ap;
-} AppPreferences;
 
-AppPreferences appPreferences;
+// Prototipos
+void espnowInit();
+void broadcastInit();
+bool bme280Init();
 
 
-//Structure example to send data BME280
-//Must match the receiver structure
-// typedef struct struct_message {
-//     float temp;
-//     float hum;
-//     float pres;
-//     byte macAddress[6];   //Identificador dispositivo
-// } struct_message;
-
-// // Create a struct_message called BME280Readings to hold sensor readings
-// struct_message BME280Readings;
-
-// // Create a struct_message to hold incoming sensor readings
-// struct_message incomingReadings;
-
-
-
-
-// MQTT credenciales. Seran declaradas en otro lugar de codigo
-// extern const char* MQTT_SERVER; 
-// extern const int  MQTT_SERVERPORT;
-// extern const char* MQTT_USERNAME;   
-// extern const char* MQTT_PASSWORD;   
-
-
-//Utilizado para el envio de mensajes
-// extern char buffer[20]; 
-
-//Metodos accesibles
-// String readDHTTemperature(); 
-// String readDHTHumidity();
-// IPAddress getIp();
-
-// String bme280Temperature();
-// String bme280readHumidity();
-
-//struct_message_bme readbme280();
+bool sensorsBme280Active = false;
+unsigned long previousMillis = 0;
 
